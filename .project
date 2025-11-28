@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>ava-trade</name>
+	<name>ims</name>
 	<comment></comment>
 	<projects>
-		<project>ava-trade</project>
+		<project>ims</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
