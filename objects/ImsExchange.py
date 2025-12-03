@@ -39,7 +39,6 @@ class ImsExchange:
     # in       : (return_as)
     # out      : (result)
     # --------------------------------------------------------
-  
     
     def obj_get(self, return_as = tuple):
         
