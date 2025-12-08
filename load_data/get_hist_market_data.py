@@ -46,9 +46,11 @@ def get_hist_mkt_data(agt_err, agt_log, agt_ora):
         # Connect to TWS
         #if not tws.connect_and_start("127.0.0.1", 7497, 0): # using Trader Workstation
         if not tws.connect_and_start("127.0.0.1", 4002, 0):  # using Gateway
+            agt_err.title_put(text = 'Failed to connect to TWS')
             print("Failed to connect to TWS")
             exit(1)
     
+        agt_log.title_put(text = 'Connected to TWS')
         print("Connected to TWS")
         
         # Get server time
@@ -56,6 +58,8 @@ def get_hist_mkt_data(agt_err, agt_log, agt_ora):
             time_value = tws.get_current_time()
             print(f"Server time: {time_value}")
         except Exception as e:
+            agt_err.title_put(text = 'Error getting server time')
+            agt_err.title_put(text = e)
             print(f"Error getting server time: {e}")
 
         
@@ -82,6 +86,7 @@ def get_hist_mkt_data(agt_err, agt_log, agt_ora):
         # go through each ticker at a time
         
         for this_ticker in ticker_list:
+            agt_log.title_put(text = this_ticker)
             print("this_ticker", this_ticker)
             
             # Define a contract (e.g., AAPL stock)
@@ -98,6 +103,8 @@ def get_hist_mkt_data(agt_err, agt_log, agt_ora):
                 #print(f"Contract details: {details[0].longName if details else 'No details'}")
                 print(f"Contract details: {this_ticker if details else 'No details'}")
             except Exception as e:
+                agt_err.title_put(text = 'Error getting server time')
+                agt_err.title_put(text = e)
                 print(f"Error getting contract details: {e}")
                 
             # First get the historical BID data for this ticker
@@ -117,6 +124,7 @@ def get_hist_mkt_data(agt_err, agt_log, agt_ora):
                                 what_to_show=           my_what_to_show,
                                 use_rth=                True
                 )
+                agt_log.title_put(text = 'Requesting bid data')
                 print(f"Historical BID data: {len(bid_bars)} bid_bars")
                 for bid_bar in bid_bars[:3]: # Print first 3 bars
                     
@@ -146,10 +154,13 @@ def get_hist_mkt_data(agt_err, agt_log, agt_ora):
                     hist_mkt_data_dict[new_hist_mkt_data.hmd_inv_ticker,new_hist_mkt_data.hmd_start_datetime, new_hist_mkt_data.hmd_freq_type] = new_hist_mkt_data
             
             except Exception as e:
+                agt_err.title_put(text = 'Error getting contract details')
+                agt_err.title_put(text = e)
                 print(f"Error getting contract details: {e}")
                         
             # Next get the historical ASK data for this ticker
             my_what_to_show="ASK"
+            agt_log.title_put(text = 'Requesting ask data')
             print("About to request Historical ASK Data for this_ticker",    this_ticker,
                   "end date time",                      my_end_date_time, 
                   "duration_str",                       my_duration_str, 
@@ -193,19 +204,26 @@ def get_hist_mkt_data(agt_err, agt_log, agt_ora):
      
                     
             except Exception as e:
+                agt_err.title_put(text = 'Error getting historical ask data')
+                agt_err.title_put(text = e)
                 print(f"Error getting historical ask data: {e}")
                 
             
         # Now we have the dict full of all of the data we should save it to the database
             
+        agt_log.title_put(text = 'About to save to the database')
         print("About to save to the database")
         status = save_hist_market_data(agt_err, agt_log, agt_ora, hist_mkt_data_dict)
+        agt_log.title_put(text = 'After saving to the database - status')
+        agt_log.title_put(text = status)
         print("Status after saving to database", status)
         
     finally:
         # Disconnect
+        agt_log.title_put(text = 'Disconnecting')
         print("Disconnecting...")
         tws.disconnect_and_stop()
+        agt_log.title_put(text = 'Disconnected')
         print("Disconnected")
         
    
