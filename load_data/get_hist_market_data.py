@@ -37,7 +37,7 @@ from utils.config import FOLDER_ERR,  FOLDER_LOG
 # mw_get_hist_mkt_data
 # ----------------------------------------------------------------------------------------------------------------------------
 
-def mw_get_hist_mkt_data(agt_err, agt_log, agt_ora):
+def get_hist_mkt_data(agt_err, agt_log, agt_ora):
 
     # Create the wrapper
     tws = TWSSyncWrapper(timeout=10) # 10 seconds timeout
@@ -67,8 +67,8 @@ def mw_get_hist_mkt_data(agt_err, agt_log, agt_ora):
         # Set up the parameters to ask for
         #my_end_date_time="", # Empty for current time
         my_end_date_time="20251130 23:59:59 UTC" # Hardcoded to test format
-        #my_duration_str="1 D" # goes back 1 day
-        my_duration_str="1 W" # goes back 1 week
+        my_duration_str="1 D" # goes back 1 day
+        #my_duration_str="1 W" # goes back 1 week
         #my_duration_str="1 M" # goes back 1 month
         #my_duration_str="1 Y" # goes back 1 year
         #my_bar_size_setting="1 hour"
@@ -142,7 +142,8 @@ def mw_get_hist_mkt_data(agt_err, agt_log, agt_ora):
                                                        hmd_last_traded_price    = 0
                                                       )
                     
-                    hist_mkt_data_dict[new_hist_mkt_data.hmd_inv_ticker,new_hist_mkt_data.start_datetime, new_hist_mkt_data.freq_type] = new_hist_mkt_data
+                    
+                    hist_mkt_data_dict[new_hist_mkt_data.hmd_inv_ticker,new_hist_mkt_data.hmd_start_datetime, new_hist_mkt_data.hmd_freq_type] = new_hist_mkt_data
             
             except Exception as e:
                 print(f"Error getting contract details: {e}")
@@ -188,7 +189,7 @@ def mw_get_hist_mkt_data(agt_err, agt_log, agt_ora):
                                                        hmd_last_traded_price    = 0
                                                       )
                     
-                    hist_mkt_data_dict[new_hist_mkt_data.hmd_inv_ticker,new_hist_mkt_data.start_datetime, new_hist_mkt_data.freq_type] = new_hist_mkt_data
+                    hist_mkt_data_dict[new_hist_mkt_data.hmd_inv_ticker,new_hist_mkt_data.hmd_start_datetime, new_hist_mkt_data.hmd_freq_type] = new_hist_mkt_data
      
                     
             except Exception as e:
@@ -197,6 +198,7 @@ def mw_get_hist_mkt_data(agt_err, agt_log, agt_ora):
             
         # Now we have the dict full of all of the data we should save it to the database
             
+        print("About to save to the database")
         status = save_hist_market_data(agt_err, agt_log, agt_ora, hist_mkt_data_dict)
         print("Status after saving to database", status)
         
@@ -283,8 +285,8 @@ if __name__ == '__main__':
     ora_params      = ('L02.local', DB_PORT, DB_TIMEZONE, DB_TNS_SERVICE, "IMS", 'l02focus')
     agt_ora         = AvaAgtOra(key = 'agent - ora', agt_ctl = None, agt_err = agt_err, agt_log = agt_log, params = ora_params)
    
-    status = mw_get_hist_mkt_data(agt_err = agt_err, 
-                                  agt_log = agt_log, 
-                                  agt_ora = agt_ora)
+    status = get_hist_mkt_data(agt_err = agt_err, 
+                               agt_log = agt_log, 
+                               agt_ora = agt_ora)
     
     
