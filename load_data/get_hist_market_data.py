@@ -1,10 +1,12 @@
 # ------------------------------------------------------------
-# filename : mw_get_hist_mkt_data.py
+# filename : get_hist_mkt_data.py
 # descr    : Get Historical market data from IB 
 #             
 # date       ver who change
 # ---------- --- --- ------
 # 2025-12-02 101 MW  initial write
+# 2025-12-07 102 MW  changing to use ImsHistMktData and to first
+#                    run for BID then for ASK saving in a list
 # ------------------------------------------------------------
 
 from   ibapi.sync_wrapper import TWSSyncWrapper
@@ -13,6 +15,7 @@ import oracledb
 from   datetime           import datetime
 from   agents.AvaAgtOra   import AvaAgtOra
 from   agents.AvaAgtLog   import AvaAgtLog
+from   objects.ImsHistMktData import ImsHistMktData
 
 # ============================================================================================================================
 # config
@@ -70,10 +73,14 @@ def mw_get_hist_mkt_data(agt_err, agt_log, agt_ora):
         #my_duration_str="1 Y" # goes back 1 year
         #my_bar_size_setting="1 hour"
         my_bar_size_setting="1 MIN"
-        #my_what_to_show="TRADES"
-        my_what_to_show="BID"
+
+        # set up a dict to be used for the BID and then the OFFER hist mkt data
+        # which will be keyed on inv_ticker
         
-    
+        hist_mkt_data_dict = {}
+        
+        # go through each ticker at a time
+        
         for this_ticker in ticker_list:
             print("this_ticker", this_ticker)
             
@@ -93,16 +100,16 @@ def mw_get_hist_mkt_data(agt_err, agt_log, agt_ora):
             except Exception as e:
                 print(f"Error getting contract details: {e}")
                 
-            # Get historical data
-            
-            print("Historical Data for this_ticker",    this_ticker,
+            # First get the historical BID data for this ticker
+            my_what_to_show="BID"
+            print("About to request Historical BID Data for this_ticker",    this_ticker,
                   "end date time",                      my_end_date_time, 
                   "duration_str",                       my_duration_str, 
                   "bar_size_setting ",                  my_bar_size_setting,
                   "what_to_show ",                      my_what_to_show)
             
             try:
-                bars = tws.get_historical_data(
+                bid_bars = tws.get_historical_data(
                                 contract=               contract,
                                 end_date_time=          my_end_date_time, 
                                 duration_str=           my_duration_str, 
@@ -110,26 +117,87 @@ def mw_get_hist_mkt_data(agt_err, agt_log, agt_ora):
                                 what_to_show=           my_what_to_show,
                                 use_rth=                True
                 )
-                print(f"Historical data: {len(bars)} bars")
-                for bar in bars[:3]: # Print first 3 bars
+                print(f"Historical BID data: {len(bid_bars)} bid_bars")
+                for bid_bar in bid_bars[:3]: # Print first 3 bars
                     
-                    status = save_hist_market_data(  agt_err                 = agt_err,
-                                                     agt_log                 = agt_log, 
-                                                     agt_ora                 = agt_ora, 
-                                                     HMD_FREQ_TYPE           = my_bar_size_setting,
-                                                     HMD_INV_TICKER          = this_ticker,
-                                                     HMD_START_DATETIME      = bar.date, 
-                                                     HMD_END_DATETIME        = bar.date, 
-                                                     HMD_START_BID_PRICE     = bar.open, 
-                                                     HMD_HIGHEST_BID_PRICE   = bar.high, 
-                                                     HMD_LOWEST_BID_PRICE    = bar.low, 
-                                                     HMD_LAST_BID_PRICE      = bar.close, 
-                                                     HMD_TOTAL_TRADED_VOLUME = bar.volume)
+                    # save the BID data as an object before adding it in a Dict for the
+                    # key of inv_ticker, inv_start_datetime, freq_type
+                    
+                    new_hist_mkt_data = ImsHistMktData(hmd_inv_ticker           = this_ticker, 
+                                                       hmd_start_datetime       = bid_bar.date, 
+                                                       hmd_end_datetime         = bid_bar.date, 
+                                                       hmd_freq_type            = 'DAILY', 
+                                                       hmd_start_bid_price      = bid_bar.open, 
+                                                       hmd_highest_bid_price    = bid_bar.high, 
+                                                       hmd_lowest_bid_price     = bid_bar.low, 
+                                                       hmd_last_bid_price       = bid_bar.close, 
+                                                       hmd_total_traded_volume  = bid_bar.volume,
+                                                       hmd_start_ask_price      = 0, 
+                                                       hmd_highest_ask_price    = 0, 
+                                                       hmd_lowest_ask_price     = 0, 
+                                                       hmd_last_ask_price       = 0, 
+                                                       hmd_first_traded_price   = 0, 
+                                                       hmd_highest_traded_price = 0, 
+                                                       hmd_lowest_traded_price  = 0, 
+                                                       hmd_last_traded_price    = 0
+                                                      )
+                    
+                    hist_mkt_data_dict[new_hist_mkt_data.hmd_inv_ticker,new_hist_mkt_data.start_datetime, new_hist_mkt_data.freq_type] = new_hist_mkt_data
+            
+            except Exception as e:
+                print(f"Error getting contract details: {e}")
+                        
+            # Next get the historical ASK data for this ticker
+            my_what_to_show="ASK"
+            print("About to request Historical ASK Data for this_ticker",    this_ticker,
+                  "end date time",                      my_end_date_time, 
+                  "duration_str",                       my_duration_str, 
+                  "bar_size_setting ",                  my_bar_size_setting,
+                  "what_to_show ",                      my_what_to_show)
+            
+            try:
+                ask_bars = tws.get_historical_data(
+                                contract=               contract,
+                                end_date_time=          my_end_date_time, 
+                                duration_str=           my_duration_str, 
+                                bar_size_setting=       my_bar_size_setting,
+                                what_to_show=           my_what_to_show,
+                                use_rth=                True
+                )
+                print(f"Historical ASK data: {len(bid_bars)} ask_bars")
+                for ask_bar in ask_bars[:3]: # Print first 3 bars
+                    
+                    # save the BID data as an object before adding it in a Dict for this inv_ticker key
+                    
+                    new_hist_mkt_data = ImsHistMktData(hmd_inv_ticker           = this_ticker, 
+                                                       hmd_start_datetime       = ask_bar.date, 
+                                                       hmd_end_datetime         = ask_bar.date, 
+                                                       hmd_freq_type            = 'DAILY', 
+                                                       hmd_start_bid_price      = 0, 
+                                                       hmd_highest_bid_price    = 0, 
+                                                       hmd_lowest_bid_price     = 0, 
+                                                       hmd_last_bid_price       = 0, 
+                                                       hmd_total_traded_volume  = 0,
+                                                       hmd_start_ask_price      = ask_bar.open, 
+                                                       hmd_highest_ask_price    = ask_bar.high, 
+                                                       hmd_lowest_ask_price     = ask_bar.low, 
+                                                       hmd_last_ask_price       = ask_bar.close, 
+                                                       hmd_first_traded_price   = 0, 
+                                                       hmd_highest_traded_price = 0, 
+                                                       hmd_lowest_traded_price  = 0, 
+                                                       hmd_last_traded_price    = 0
+                                                      )
+                    
+                    hist_mkt_data_dict[new_hist_mkt_data.hmd_inv_ticker,new_hist_mkt_data.start_datetime, new_hist_mkt_data.freq_type] = new_hist_mkt_data
+     
                     
             except Exception as e:
-                print(f"Error getting historical data: {e}")
+                print(f"Error getting historical ask data: {e}")
+                
             
-    
+        # Now we have the dict full of all of the data we should save it to the database
+            
+        status = save_hist_market_data(agt_err, agt_log, agt_ora, hist_mkt_data_dict)
     
     finally:
         # Disconnect
@@ -167,9 +235,28 @@ def get_tickers():
 # out        : (status)
 #------------------------------------------------------------------------------------------------------------------------
 
-def save_hist_market_data(agt_err, agt_log, agt_ora, HMD_FREQ_TYPE, HMD_INV_TICKER, HMD_START_DATETIME, HMD_END_DATETIME, HMD_START_BID_PRICE, HMD_HIGHEST_BID_PRICE, HMD_LOWEST_BID_PRICE, HMD_LAST_BID_PRICE, HMD_TOTAL_TRADED_VOLUME):
+def save_hist_market_data(agt_err, agt_log, agt_ora, hist_mkt_data_dict):
     
     status = ''
+    
+    # loop through the dict, pulling out one record at a time and saving it to the database
+    
+    for key, obj in hist_mkt_data_dict.items():
+        
+        ticker, start_dt, end_dt, freq = key  # unpack the composite key
+    
+        print(f"Processing record for {ticker} [{freq}] from {start_dt} to {end_dt}")
+        
+        # Access attributes from the object
+        print("Last Bid Price:", obj.hmd_last_bid_price)
+        print("Total Volume:", obj.hmd_total_traded_volume)
+    
+        # Example: update something
+        obj.hmd_last_bid_price += 1.0  # pretend adjustment
+        print("Adjusted Last Bid Price:", obj.hmd_last_bid_price)
+    
+        print("-" * 40)
+    
     print(f" {HMD_START_DATETIME}: O={HMD_START_BID_PRICE}, H={HMD_HIGHEST_BID_PRICE}, L={HMD_LOWEST_BID_PRICE}, C={HMD_LAST_BID_PRICE}, V={HMD_TOTAL_TRADED_VOLUME}")
   
     
