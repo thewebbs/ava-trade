@@ -408,7 +408,7 @@ class TWSSyncWrapper(EWrapper, EClient):
 		timeout: Timeout in seconds (uses default if None)
 
 		Returns:
-		A list of ContractDetails objects
+		A list of ContractDetails db_objects
 
 		Raises:
 		ResponseTimeout: If no response is received within the timeout period

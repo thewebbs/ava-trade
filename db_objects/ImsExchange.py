@@ -33,7 +33,7 @@ class ImsExchange:
 
     def __init__(self, exc_symbol, exc_name, exc_ib_exchange, exc_ib_primary):
         
-        self.exc_symbol      = exc_symbol
+        inv_tickerself.exc_symbol      = exc_symbol
         self.exc_name        = exc_name 
         self.exc_ib_exchange = exc_ib_exchange 
         self.exc_ib_primary  = exc_ib_primary
