@@ -33,6 +33,7 @@ class ImsHistMktData:
 
     def __init__(self, hmd_inv_ticker, hmd_start_datetime, hmd_end_datetime, hmd_freq_type, hmd_start_bid_price, hmd_highest_bid_price, hmd_lowest_bid_price, hmd_last_bid_price, hmd_start_ask_price, hmd_highest_ask_price, hmd_lowest_ask_price, hmd_last_ask_price, hmd_first_traded_price, hmd_highest_traded_price, hmd_lowest_traded_price, hmd_last_traded_price, hmd_total_traded_volume):
         
+        
         self.hmd_inv_ticker           = hmd_inv_ticker
         self.hmd_start_datetime       = hmd_start_datetime 
         self.hmd_end_datetime         = hmd_end_datetime 
@@ -84,7 +85,7 @@ class ImsHistMktData:
         
     def put_db(self, agt_db):
     
-        agt_db.agt_put(table_name = 'IMS_HIST_MKT_DATA', row_data = [obj_name_val_dict(obj = self)])  
+        agt_db.agt_put(table_name = 'IMS_HIST_MKT_DATA', row_data_lis = [obj_name_val_dict(obj = self)])  
           
         return
     
@@ -102,14 +103,14 @@ class ImsHistMktData:
     
     def __repr__(self): 
         
-        return f"{self.exc_symbol}"
+        return f"{self.hmd_inv_ticker}"
     
     
     def __str__(self): 
         
-        return f"{self.exc_symbol}"
+        return f"{self.hmd_inv_ticker}"
 
 
     def __unicode__(self): 
             
-        return f"{self.exc_symbol}"
+        return f"{self.hmd_inv_ticker}"

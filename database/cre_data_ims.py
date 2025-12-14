@@ -13,9 +13,9 @@
 from agents.AvaAgtOra        import AvaAgtOra
 from agents.AvaAgtLog        import AvaAgtLog
 
-from objects.ImsCurrencyType import ImsCurrencyType
-from objects.ImsExchange     import ImsExchange
-from objects.ImsSector       import ImsSector
+from db_objects.ImsCurrencyType import ImsCurrencyType
+from db_objects.ImsExchange     import ImsExchange
+from db_objects.ImsSector       import ImsSector
 
 # ============================================================================================================================
 # config
