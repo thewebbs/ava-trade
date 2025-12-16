@@ -8,10 +8,13 @@
 # date       ver who change
 # ---------- --- --- ------
 # 2025-12-03 101 DW  initial write
+# 2025-12-16 102 DW  changed AGT_KND -> AGT_KIND
 # ------------------------------------------------------------
 
-from agents.AvaAgtOra        import AvaAgtOra
-from agents.AvaAgtLog        import AvaAgtLog
+from agents.AvaAgtLog           import AvaAgtLog
+from agents.AvaAgtOra           import AvaAgtOra
+from agents.AvaAgtOs            import host_name_passwd_get
+from agents.AvaAgtLog           import AvaAgtLog
 
 from db_objects.ImsCurrencyType import ImsCurrencyType
 from db_objects.ImsExchange     import ImsExchange
@@ -21,7 +24,7 @@ from db_objects.ImsSector       import ImsSector
 # config
 # ============================================================================================================================
 
-from utils.config import AGT_KND_ERR, AGT_KND_LOG
+from utils.config import AGT_KIND_ERR, AGT_KIND_LOG
 from utils.config import DB_HOST,     DB_PORT,          DB_TIMEZONE,     DB_TNS_SERVICE, DB_USERNAME, DB_PASSWORD
 from utils.config import FOLDER_ERR,  FOLDER_LOG
 
@@ -102,7 +105,7 @@ if __name__ == '__main__':
         
     file_folder = FOLDER_LOG
     file_name   = 'cre_data_ims.log'
-    file_kind   = AGT_KND_LOG
+    file_kind   = AGT_KIND_LOG
   
     log_params  = (file_folder, file_name, file_kind)
     agt_log     = AvaAgtLog(key = 'agent - log', params = log_params)
@@ -111,14 +114,16 @@ if __name__ == '__main__':
     
     file_folder = FOLDER_ERR
     file_name   = 'cre_data_ims.err'
-    file_kind   = AGT_KND_ERR
+    file_kind   = AGT_KIND_ERR
 
     err_params  = (file_folder, file_name, file_kind)
     agt_err     = AvaAgtLog(key = 'agent - err', params = err_params)   
        
     # create oracle agent
         
-    ora_params      = (DB_HOST, DB_PORT, DB_TIMEZONE, DB_TNS_SERVICE, 'IMS', DB_PASSWORD)
+    (hostname, password) = host_name_passwd_get()
+    
+    ora_params      = (hostname, DB_PORT, DB_TIMEZONE, DB_TNS_SERVICE, 'IMS', password)
     agt_ora         = AvaAgtOra(key = 'agent - ora', agt_ctl = None, agt_err = agt_err, agt_log = agt_log, params = ora_params)
    
     cre_data_ims(agt_err = agt_err, agt_log = agt_log, agt_ora = agt_ora)
